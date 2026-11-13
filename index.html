@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Santa Cruz, 1906 and now</title>
+<style>
+  :root { color-scheme: light dark; --bg:#f4f2ee; --fg:#1d1c1a; --muted:#66625b; --line:#ffffff; --edge:#d6d2ca; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#161514; --fg:#ece9e3; --muted:#a09b92; --edge:#3a3835; } }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.45 Georgia, "Times New Roman", serif; }
+  main { max-width:1900px; margin:0 auto; padding:20px 16px 40px; }
+  h1 { font-size:1.5rem; font-weight:normal; margin:0 0 4px; }
+  h2 { font-size:1.15rem; font-weight:normal; margin:24px 0 4px; }
+  p { margin:6px 0; color:var(--muted); max-width:80ch; }
+  a { color:var(--fg); }
+  .view { position:relative; margin:14px 0 4px; overflow:hidden; background:#000; border:1px solid var(--edge);
+          user-select:none; touch-action:none; cursor:grab; }
+  .view.panning { cursor:grabbing; }
+  .layer { position:absolute; inset:0; overflow:hidden; }
+  .layer img { position:absolute; left:0; top:0; transform-origin:0 0; max-width:none; pointer-events:none; }
+  .handle { position:absolute; top:0; bottom:0; width:30px; margin-left:-15px; cursor:ew-resize; }
+  .handle::before { content:""; position:absolute; top:0; bottom:0; left:14px; width:2px; background:var(--line); box-shadow:0 0 4px rgba(0,0,0,.7); }
+  .handle::after { content:""; position:absolute; top:50%; left:1px; width:28px; height:28px; margin-top:-14px; border-radius:50%; background:var(--line); box-shadow:0 0 4px rgba(0,0,0,.7); }
+  .tag { position:absolute; top:8px; padding:2px 8px; background:rgba(0,0,0,.55); color:#fff; font:13px/1.4 system-ui, sans-serif; pointer-events:none; }
+  .tag.l { left:8px; } .tag.r { right:8px; }
+  .credit { font:13px/1.4 system-ui, sans-serif; color:var(--muted); margin:0 0 10px; max-width:none; }
+  .bar { display:flex; gap:10px 18px; flex-wrap:wrap; align-items:center; font:14px system-ui, sans-serif; color:var(--muted); margin:8px 0; }
+  button { font:inherit; padding:3px 10px; border:1px solid var(--edge); background:transparent; color:var(--fg); border-radius:4px; cursor:pointer; }
+  button:hover { border-color:var(--fg); }
+  .places { display:flex; gap:6px; flex-wrap:wrap; }
+  .bw .layer.now img { filter:grayscale(1) contrast(1.05); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Santa Cruz from the kite camera, 1906 and now</h1>
+  <p>Left of the line is the George R. Lawrence Co. panorama of 1906; right of it is today's city seen from the same point, about 614 feet above the water just off West Cliff. Drag the round handle to move the line. Scroll or double-click to zoom in where the pointer is; drag the picture to move around.</p>
+  <div class="view" id="view">
+    <div class="layer now"><img id="imgNow" src="now_google_earth.jpg?v=28" alt="Today's Santa Cruz from the 1906 camera point, rendered from the Google Earth 3D model"></div>
+    <div class="layer then" id="thenLayer"><img id="imgThen" src="then_1906.jpg" alt="Santa Cruz in 1906, kite-camera panorama"></div>
+    <div class="handle" id="handle" role="slider" aria-label="Dividing line" aria-valuemin="0" aria-valuemax="100" tabindex="0"></div>
+    <span class="tag l">1906</span><span class="tag r">Now</span>
+  </div>
+  <p class="credit">Left: George R. Lawrence Co., 1906, Library of Congress LC-USZ62-53410. Right: Google Earth, imagery date 5/14/2024 (Google); screen captures of the 3D model reprojected onto the 1906 print. The right side is a rendered model, not a photograph.</p>
+  <div class="bar">
+    <span>Zoom <button type="button" id="zin" aria-label="Zoom in">+</button> <button type="button" id="zout" aria-label="Zoom out">-</button> <button type="button" id="zfit">Whole picture</button></span>
+    <label><input type="checkbox" id="bw"> Show today in black and white</label>
+  </div>
+  <div class="bar"><span>Go to</span><span class="places" id="places"></span></div>
+  <p>Buildings and trees in the model are approximate up close, and the beach, wharf and river mouth are where they are today. Place buttons point at where each place sits in the 1906 picture.</p>
+  <h2>More about the 1906 photograph</h2>
+  <p>A place-by-place guide to the houses, wharves and hills in the picture, with text by Peter Nurkse, is on the Virtual Santa Cruz Exhibit: <a href="https://www.hiram.ws/virtualsc/photoa/SC1906.html" target="_blank" rel="noopener">Santa Cruz in 1906</a>. That site is independent. This page is not affiliated with it and has not checked its details.</p>
+  <p>The original is held by the Library of Congress: <a href="https://www.loc.gov/item/2007663893/" target="_blank" rel="noopener">LC-USZ62-53410</a>.</p>
+</main>
+<script>
+  const PLACES = [
+    {name:'West Cliff block', x:0.159, y:0.540, zoom:5}, {name:'Neary Lagoon', x:0.095, y:0.376, zoom:5},
+    {name:'Foot of Bay Street', x:0.293, y:0.503, zoom:6}, {name:'Wharves', x:0.445, y:0.583, zoom:4},
+    {name:'Foot of Pacific Avenue', x:0.353, y:0.466, zoom:7}, {name:'Beach Hill', x:0.388, y:0.397, zoom:6},
+    {name:'Downtown', x:0.327, y:0.326, zoom:7}, {name:'Soquel Avenue bridge', x:0.384, y:0.329, zoom:8},
+    {name:'Boardwalk and Casino site', x:0.539, y:0.453, zoom:6}, {name:'River mouth', x:0.656, y:0.423, zoom:6},
+    {name:'Seabright', x:0.758, y:0.427, zoom:6}, {name:'Twin Lakes', x:0.823, y:0.412, zoom:6},
+    {name:'Loma Prieta', x:0.682, y:0.254, zoom:6}
+  ];
+  const ASPECT = 5364 / 2052, MAXZ = 12;
+  const view = document.getElementById('view'), thenLayer = document.getElementById('thenLayer'),
+        handle = document.getElementById('handle'), imgs = [document.getElementById('imgNow'), document.getElementById('imgThen')];
+  let z = 1, tx = 0, ty = 0, split = 0.5, vw = 0, vh = 0, anim = null;
+
+  function layout() {
+    vw = view.clientWidth;
+    vh = Math.round(Math.min(vw / ASPECT, window.innerHeight * 0.8));
+    view.style.height = vh + 'px';
+    imgs.forEach(i => { i.style.width = vw + 'px'; i.style.height = (vw / ASPECT) + 'px'; });
+    apply();
+  }
+  function clampPan() {
+    const iw = vw * z, ih = vw / ASPECT * z;
+    tx = iw <= vw ? (vw - iw) / 2 : Math.min(0, Math.max(vw - iw, tx));
+    ty = ih <= vh ? (vh - ih) / 2 : Math.min(0, Math.max(vh - ih, ty));
+  }
+  function apply() {
+    clampPan();
+    const t = 'translate(' + tx + 'px,' + ty + 'px) scale(' + z + ')';
+    imgs.forEach(i => i.style.transform = t);
+    thenLayer.style.clipPath = 'inset(0 ' + (100 - split * 100) + '% 0 0)';
+    handle.style.left = (split * 100) + '%';
+    handle.setAttribute('aria-valuenow', Math.round(split * 100));
+  }
+  function zoomAt(cx, cy, nz) {
+    nz = Math.max(1, Math.min(MAXZ, nz));
+    tx = cx - (cx - tx) * nz / z; ty = cy - (cy - ty) * nz / z; z = nz; apply();
+  }
+  function flyTo(fx, fy, nz) {                    // fx, fy: fractions of the picture; centers that point
+    clearTimeout(anim);
+    const z0 = z, c0 = [(vw / 2 - tx) / (vw * z), (vh / 2 - ty) / (vw / ASPECT * z)], t0 = performance.now(), dur = 600;
+    (function step() {                            // timer-driven so it also completes when the tab is not being painted
+      const k = Math.min(1, (performance.now() - t0) / dur), e = k * k * (3 - 2 * k);
+      z = Math.exp(Math.log(z0) + (Math.log(nz) - Math.log(z0)) * e);
+      const cx = c0[0] + (fx - c0[0]) * e, cy = c0[1] + (fy - c0[1]) * e;
+      tx = vw / 2 - cx * vw * z; ty = vh / 2 - cy * vw / ASPECT * z; apply();
+      if (k < 1) anim = setTimeout(step, 16);
+    })();
+  }
+  function local(e) { const r = view.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
+
+  view.addEventListener('wheel', e => { e.preventDefault(); const [x, y] = local(e); zoomAt(x, y, z * Math.exp(-e.deltaY * 0.0015)); }, {passive:false});
+  view.addEventListener('dblclick', e => { const [x, y] = local(e); const fx = (x - tx) / (vw * z), fy = (y - ty) / (vw / ASPECT * z); flyTo(fx, fy, Math.min(MAXZ, z * 2)); });
+
+  const pts = new Map(); let mode = null, pinch = null;
+  view.addEventListener('pointerdown', e => {
+    try { view.setPointerCapture(e.pointerId); } catch (err) {}
+    pts.set(e.pointerId, local(e)); clearTimeout(anim);
+    if (pts.size === 2) { const [a, b] = [...pts.values()]; pinch = {d: Math.hypot(a[0]-b[0], a[1]-b[1]), z}; mode = 'pinch'; }
+    else if (e.target === handle) mode = 'split';
+    else { mode = 'pan'; view.classList.add('panning'); }
+  });
+  view.addEventListener('pointermove', e => {
+    if (!pts.has(e.pointerId)) return;
+    const prev = pts.get(e.pointerId), cur = local(e); pts.set(e.pointerId, cur);
+    if (mode === 'split') { split = Math.max(0, Math.min(1, cur[0] / vw)); apply(); }
+    else if (mode === 'pan') { tx += cur[0] - prev[0]; ty += cur[1] - prev[1]; apply(); }
+    else if (mode === 'pinch' && pts.size === 2) {
+      const [a, b] = [...pts.values()]; zoomAt((a[0]+b[0])/2, (a[1]+b[1])/2, pinch.z * Math.hypot(a[0]-b[0], a[1]-b[1]) / pinch.d);
+    }
+  });
+  function up(e) { pts.delete(e.pointerId); if (pts.size === 0) { mode = null; view.classList.remove('panning'); } }
+  view.addEventListener('pointerup', up); view.addEventListener('pointercancel', up);
+  handle.addEventListener('keydown', e => {
+    if (e.key === 'ArrowLeft') { split = Math.max(0, split - 0.02); apply(); }
+    if (e.key === 'ArrowRight') { split = Math.min(1, split + 0.02); apply(); }
+  });
+  document.getElementById('zin').addEventListener('click', () => zoomAt(vw / 2, vh / 2, z * 1.6));
+  document.getElementById('zout').addEventListener('click', () => zoomAt(vw / 2, vh / 2, z / 1.6));
+  document.getElementById('zfit').addEventListener('click', () => flyTo(0.5, 0.5, 1));
+  document.getElementById('bw').addEventListener('change', e => view.classList.toggle('bw', e.target.checked));
+  const pl = document.getElementById('places');
+  PLACES.forEach(p => { const b = document.createElement('button'); b.type = 'button'; b.textContent = p.name;
+    b.addEventListener('click', () => flyTo(p.x, p.y, p.zoom)); pl.appendChild(b); });
+  window.addEventListener('resize', layout);
+  layout();
+</script>
+</body>
+</html>
