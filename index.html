@@ -9,11 +9,13 @@
   @media (prefers-color-scheme: dark) { :root { --bg:#161514; --fg:#ece9e3; --muted:#a09b92; --edge:#3a3835; } }
   body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.45 Georgia, "Times New Roman", serif; }
   main { max-width:1900px; margin:0 auto; padding:20px 16px 40px; }
-  h1 { font-size:1.5rem; font-weight:normal; margin:0 0 4px; }
-  h2 { font-size:1.15rem; font-weight:normal; margin:24px 0 4px; }
-  p { margin:6px 0; color:var(--muted); max-width:80ch; }
+  h1 { font-size:1.6rem; font-weight:normal; margin:0 0 6px; text-align:center; }
+  h2 { font-size:1.15rem; font-weight:normal; margin:0 0 6px; }
+  p { margin:6px auto; color:var(--muted); max-width:90ch; text-align:center; }
   a { color:var(--fg); }
-  .view { position:relative; margin:14px 0 4px; overflow:hidden; background:#000; border:1px solid var(--edge);
+  .hint { font-size:.9rem; }
+  .more { margin-top:30px; padding-top:18px; border-top:1px solid var(--edge); text-align:center; }
+  .view { position:relative; margin:10px 0 6px; overflow:hidden; background:#000; border:1px solid var(--edge);
           user-select:none; touch-action:none; cursor:grab; }
   .view.panning { cursor:grabbing; }
   .layer { position:absolute; inset:0; overflow:hidden; }
@@ -23,34 +25,36 @@
   .handle::after { content:""; position:absolute; top:50%; left:1px; width:28px; height:28px; margin-top:-14px; border-radius:50%; background:var(--line); box-shadow:0 0 4px rgba(0,0,0,.7); }
   .tag { position:absolute; top:8px; padding:2px 8px; background:rgba(0,0,0,.55); color:#fff; font:13px/1.4 system-ui, sans-serif; pointer-events:none; }
   .tag.l { left:8px; } .tag.r { right:8px; }
-  .credit { font:13px/1.4 system-ui, sans-serif; color:var(--muted); margin:0 0 10px; max-width:none; }
-  .bar { display:flex; gap:10px 18px; flex-wrap:wrap; align-items:center; font:14px system-ui, sans-serif; color:var(--muted); margin:8px 0; }
+  .credit { font:13px/1.4 system-ui, sans-serif; margin:0 auto; max-width:none; }
+  .bar { display:flex; gap:8px 18px; flex-wrap:wrap; align-items:center; justify-content:center; font:14px system-ui, sans-serif; color:var(--muted); margin:10px 0; }
   button { font:inherit; padding:3px 10px; border:1px solid var(--edge); background:transparent; color:var(--fg); border-radius:4px; cursor:pointer; }
   button:hover { border-color:var(--fg); }
-  .places { display:flex; gap:6px; flex-wrap:wrap; }
+  .places { display:flex; gap:6px; flex-wrap:wrap; justify-content:center; }
   .bw .layer.now img { filter:grayscale(1) contrast(1.05); }
 </style>
 </head>
 <body>
 <main>
   <h1>Santa Cruz from the kite camera, 1906 and now</h1>
-  <p>Left of the line is the George R. Lawrence Co. panorama of 1906; right of it is today's city seen from the same point, about 614 feet above the water just off West Cliff. Drag the round handle to move the line. Scroll or double-click to zoom in where the pointer is; drag the picture to move around.</p>
+  <p>On the left, the George R. Lawrence Co. kite-camera panorama of 1906. On the right, today's city seen from the same point in the air, about 614 feet above the water just off West Cliff.</p>
+  <p class="hint">Drag the round handle to move the dividing line. Scroll or double-click to zoom in, and drag the picture to move around. The buttons jump to places as they sit in the 1906 picture.</p>
+  <div class="bar"><span class="places" id="places"></span></div>
   <div class="view" id="view">
     <div class="layer now"><img id="imgNow" src="now_google_earth.jpg?v=28" alt="Today's Santa Cruz from the 1906 camera point, rendered from the Google Earth 3D model"></div>
     <div class="layer then" id="thenLayer"><img id="imgThen" src="then_1906.jpg" alt="Santa Cruz in 1906, kite-camera panorama"></div>
     <div class="handle" id="handle" role="slider" aria-label="Dividing line" aria-valuemin="0" aria-valuemax="100" tabindex="0"></div>
     <span class="tag l">1906</span><span class="tag r">Now</span>
   </div>
-  <p class="credit">Left: George R. Lawrence Co., 1906, Library of Congress LC-USZ62-53410. Right: Google Earth, imagery date 5/14/2024 (Google); screen captures of the 3D model reprojected onto the 1906 print. The right side is a rendered model, not a photograph.</p>
   <div class="bar">
     <span>Zoom <button type="button" id="zin" aria-label="Zoom in">+</button> <button type="button" id="zout" aria-label="Zoom out">-</button> <button type="button" id="zfit">Whole picture</button></span>
     <label><input type="checkbox" id="bw"> Show today in black and white</label>
   </div>
-  <div class="bar"><span>Go to</span><span class="places" id="places"></span></div>
-  <p>Buildings and trees in the model are approximate up close, and the beach, wharf and river mouth are where they are today. Place buttons point at where each place sits in the 1906 picture.</p>
-  <h2>More about the 1906 photograph</h2>
-  <p>A place-by-place guide to the houses, wharves and hills in the picture, with text by Peter Nurkse, is on the Virtual Santa Cruz Exhibit: <a href="https://www.hiram.ws/virtualsc/photoa/SC1906.html" target="_blank" rel="noopener">Santa Cruz in 1906</a>. That site is independent. This page is not affiliated with it and has not checked its details.</p>
-  <p>The original is held by the Library of Congress: <a href="https://www.loc.gov/item/2007663893/" target="_blank" rel="noopener">LC-USZ62-53410</a>.</p>
+  <p class="credit">Left: George R. Lawrence Co., 1906, Library of Congress LC-USZ62-53410. Right: Google Earth, imagery date 5/14/2024 (Google); screen captures of the 3D model reprojected onto the 1906 print. The right side is a rendered model, not a photograph.</p>
+  <div class="more">
+    <h2>More about the 1906 photograph</h2>
+    <p>A place-by-place guide to the houses, wharves and hills in the picture, with text by Peter Nurkse, is on the Virtual Santa Cruz Exhibit: <a href="https://www.hiram.ws/virtualsc/photoa/SC1906.html" target="_blank" rel="noopener">Santa Cruz in 1906</a>. That site is independent. This page is not affiliated with it and has not checked its details.</p>
+    <p>The original is held by the Library of Congress: <a href="https://www.loc.gov/item/2007663893/" target="_blank" rel="noopener">LC-USZ62-53410</a>.</p>
+  </div>
 </main>
 <script>
   const PLACES = [
